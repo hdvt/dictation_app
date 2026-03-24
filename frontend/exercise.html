@@ -66,6 +66,10 @@
   .speed-btn{padding:.35rem .75rem;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text-muted);font-size:.85rem;cursor:pointer;transition:all .15s;}
   .speed-btn:hover{border-color:var(--accent);color:var(--accent);}
   .speed-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .replay-setting{display:flex;align-items:center;gap:.35rem;flex-shrink:0;}
+  .replay-label{font-size:.9rem;color:var(--text-muted);}
+  .replay-select{padding:.3rem .55rem;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text-muted);font-family:var(--font-sans);font-size:.82rem;cursor:pointer;transition:border-color .15s;}
+  .replay-select:focus{outline:none;border-color:var(--accent);color:var(--text);}
 
   /* WORD FEEDBACK */
   .word-feedback{min-height:2.5rem;margin-bottom:.75rem;display:flex;flex-wrap:wrap;gap:.35rem;align-items:center;font-size:1.2rem;}
@@ -188,14 +192,25 @@
               <button class="speed-btn" data-speed="0.75">0.75×</button>
               <button class="speed-btn" data-speed="0.5">0.5×</button>
             </div>
+            <div class="replay-setting">
+              <label class="replay-label" for="autoReplaySelect" title="Auto-replay">🔁</label>
+              <select class="replay-select" id="autoReplaySelect" title="Auto-replay times">
+                <option value="0">No replay</option>
+                <option value="1">Replay 1×</option>
+                <option value="2">Replay 2×</option>
+                <option value="3">Replay 3×</option>
+                <option value="5">Replay 5×</option>
+                <option value="10">Replay 10×</option>
+              </select>
+            </div>
           </div>
-          <div class="word-feedback" id="wordFeedback"></div>
           <div class="input-wrapper">
             <div class="input-highlight" id="inputHighlight" aria-hidden="true"></div>
             <textarea class="dictation-input" id="dictationInput"
               placeholder="Type what you hear…" rows="3"
               autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
           </div>
+          <div class="word-feedback" id="wordFeedback"></div>
           <div class="answer-area" id="answerArea">
             <div class="answer-label">Answer</div>
             <div class="answer-text" id="answerText"></div>
@@ -252,6 +267,8 @@ let progressData = null;
 let currentIdx = 0;
 const completed = new Set();   // indices of passed challenges in this session
 let speed = 1;
+let autoReplayTimes = parseInt(localStorage.getItem('dd-auto-replay') || '0', 10);
+let replayCountdown = 0;       // remaining auto-replays for current challenge
 let ytPlayer = null;
 let ytReady = false;
 let isPlaying = false;
@@ -373,7 +390,18 @@ function setupYouTube(videoId) {
             audioLabel.textContent = 'Playing…';
           } else {
             isPlaying = false; playBtn.innerHTML = '▶';
-            if (e.data === YT.PlayerState.ENDED || e.data === YT.PlayerState.PAUSED) {
+            if (e.data === YT.PlayerState.PAUSED) {
+              // Auto-replay: replay if challenge not yet passed and replays remain
+              if (replayCountdown > 0 && !completed.has(currentIdx)) {
+                replayCountdown--;
+                audioLabel.textContent = replayCountdown > 0
+                  ? `Auto-replaying… (${replayCountdown} left)`
+                  : 'Click play to listen again';
+                setTimeout(playCurrentChallenge, 600);
+              } else {
+                audioLabel.textContent = 'Click play to listen again';
+              }
+            } else if (e.data === YT.PlayerState.ENDED) {
               audioLabel.textContent = 'Click play to listen again';
             }
           }
@@ -425,13 +453,19 @@ function playCurrentChallenge() {
 
 // ── Answer checking ───────────────────────────────────────────
 const STRIP_RE = /[.,!?;:'"()\s]/g;
+// Normalise ALL fancy/curly apostrophe variants → plain straight apostrophe.
+// Transcripts often contain ‘ (U+2018) or ’ (U+2019); users type straight ' (U+0039).
+const FANCY_APOS = /[‘’‚‛′‵`]/g;
+function normalizeApos(str) {
+  return str.replace(FANCY_APOS, "'");
+}
 function normalize(str) {
-  return str.toLowerCase().replace(/['']/g, "'").replace(STRIP_RE, '').trim();
+  return normalizeApos(str).toLowerCase().replace(STRIP_RE, '').trim();
 }
 
 function firstWrongCharIndex(typed, answer) {
-  const a = typed.toLowerCase().replace(/['']/g, "'");
-  const b = answer.toLowerCase().replace(/['']/g, "'");
+  const a = normalizeApos(typed).toLowerCase();
+  const b = normalizeApos(answer).toLowerCase();
   for (let i = 0; i < Math.max(a.length, b.length); i++) {
     if (a[i] !== b[i]) return i;
   }
@@ -596,6 +630,7 @@ function goToChallenge(idx) {
   successBanner.classList.remove('show');
   challengeStartMs = Date.now();
   attemptCount = 0;
+  replayCountdown = autoReplayTimes;   // reset auto-replay for each new challenge
 
   if (completed.has(idx)) {
     // Challenge already passed — pre-fill the answer and lock input
@@ -723,6 +758,17 @@ document.querySelectorAll('.speed-btn').forEach(btn => {
     btn.classList.add('active');
     if (ytReady && ytPlayer) ytPlayer.setPlaybackRate(speed);
   });
+});
+
+// ── Auto-replay select ────────────────────────────────────────
+const autoReplaySelect = document.getElementById('autoReplaySelect');
+// Restore saved value and set dropdown to match
+autoReplaySelect.value = String(autoReplayTimes);
+autoReplaySelect.addEventListener('change', () => {
+  autoReplayTimes = parseInt(autoReplaySelect.value, 10);
+  localStorage.setItem('dd-auto-replay', autoReplayTimes);
+  // Apply immediately to current challenge (only if not yet passed)
+  if (!completed.has(currentIdx)) replayCountdown = autoReplayTimes;
 });
 
 document.querySelectorAll('.tab-btn').forEach(btn => {
