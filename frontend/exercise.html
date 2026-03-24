@@ -336,6 +336,13 @@ async function init() {
     document.getElementById('loadingScreen').style.display = 'none';
     document.getElementById('exerciseContent').style.display = 'block';
 
+    // Pre-fill input if starting on an already-passed challenge
+    if (completed.has(currentIdx)) {
+      input.value = challenges[currentIdx].content;
+      input.readOnly = true;
+      input.classList.add('correct');
+    }
+
     updateUI();
     updateNavMini();
     buildTranscript();
@@ -534,6 +541,9 @@ function checkAnswer() {
   if (allCorrect) {
     input.classList.add('correct');
     input.classList.remove('incorrect');
+    // Fill with canonical answer and lock the input
+    input.value = challenges[currentIdx].content;
+    input.readOnly = true;
     successBanner.classList.add('show');
 
     if (!completed.has(currentIdx)) {
@@ -548,18 +558,7 @@ function checkAnswer() {
     clearStopTimer();
     playGeneration++;
     if (ytPlayer && isPlaying) ytPlayer.pauseVideo();
-
-    const advanceFrom = currentIdx;
-    setTimeout(() => {
-      successBanner.classList.remove('show');
-      if (currentIdx !== advanceFrom) return;
-      if (currentIdx < challenges.length - 1) {
-        goToChallenge(currentIdx + 1);
-      } else {
-        // All done!
-        showCompleteScreen();
-      }
-    }, 1200);
+    // No auto-advance — user presses Enter or Next to continue
   } else {
     input.classList.add('incorrect');
     input.classList.remove('correct');
@@ -591,14 +590,26 @@ document.getElementById('redoBtn').addEventListener('click', async () => {
 function goToChallenge(idx) {
   clearStopTimer();
   currentIdx = idx;
-  input.value = '';
-  input.classList.remove('correct', 'incorrect');
   clearInputHighlight();
   wordFeedback.innerHTML = '';
   answerArea.classList.remove('show');
   successBanner.classList.remove('show');
   challengeStartMs = Date.now();
   attemptCount = 0;
+
+  if (completed.has(idx)) {
+    // Challenge already passed — pre-fill the answer and lock input
+    input.value = challenges[idx].content;
+    input.readOnly = true;
+    input.classList.add('correct');
+    input.classList.remove('incorrect');
+  } else {
+    // Fresh challenge — clear and unlock
+    input.value = '';
+    input.readOnly = false;
+    input.classList.remove('correct', 'incorrect');
+  }
+
   updateUI();
   input.focus();
 }
@@ -685,9 +696,22 @@ prevBtn.addEventListener('click', () => { if (currentIdx > 0) goToChallenge(curr
 nextBtn.addEventListener('click', () => { if (currentIdx < challenges.length - 1) goToChallenge(currentIdx + 1); });
 
 input.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); checkAnswer(); }
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    if (completed.has(currentIdx)) {
+      // Challenge already passed — Enter advances to next (or shows complete screen)
+      if (currentIdx < challenges.length - 1) {
+        goToChallenge(currentIdx + 1);
+      } else {
+        showCompleteScreen();
+      }
+    } else {
+      checkAnswer();
+    }
+  }
 });
 input.addEventListener('input', () => {
+  if (input.readOnly) return;  // don't clear state for locked (passed) challenges
   clearInputHighlight();
   input.classList.remove('correct', 'incorrect');
 });
