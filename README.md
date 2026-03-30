@@ -171,3 +171,6 @@ Open `http://localhost:5500` in your browser.
 - Access tokens expire in 15 minutes; refresh tokens last 30 days in httpOnly cookies
 - The frontend's `api.js` handles token refresh transparently on 401 responses
 
+## Todo
+- improve dication UX/UI:
+    + 

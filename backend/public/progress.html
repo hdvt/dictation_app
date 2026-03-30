@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Progress — DictationApp</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#f5f0e8;--surface:#fdfaf4;--surface2:#f0ead8;--border:#d9d0bc;--text:#1a1612;--text-muted:#7a7060;--accent:#3d6b4f;--accent-light:#e8f2ec;--danger:#c0392b;--success:#2d6a3f;--warning:#c07820;--shadow:0 2px 12px rgba(0,0,0,0.08);--shadow-lg:0 8px 32px rgba(0,0,0,0.12);--radius:10px;--font-serif:'Libre Baskerville',Georgia,serif;--font-sans:'DM Sans',system-ui,sans-serif;}
+  [data-theme="dark"]{--bg:#141210;--surface:#1e1b17;--surface2:#28241e;--border:#3a3530;--text:#ede8df;--text-muted:#8a8070;--accent:#5a9e70;--accent-light:#1a2e22;--danger:#e05545;--success:#4da868;--warning:#d4952a;}
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:var(--font-sans);background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
+  nav.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 1.5rem;display:flex;align-items:center;height:56px;gap:1.5rem;position:sticky;top:0;z-index:100;box-shadow:var(--shadow);}
+  .logo{font-family:var(--font-serif);font-size:1.1rem;font-weight:700;color:var(--accent);text-decoration:none;display:flex;align-items:center;gap:.5rem;}
+  .logo-icon{width:28px;height:28px;background:var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.9rem;}
+  .nav-links{display:flex;gap:.25rem;margin-left:auto;align-items:center;}
+  .nav-links a{font-size:.875rem;font-weight:500;color:var(--text-muted);text-decoration:none;padding:.4rem .75rem;border-radius:6px;transition:all .15s;}
+  .nav-links a:hover{color:var(--text);background:var(--surface2);}
+  .nav-links a.active{color:var(--accent);background:var(--accent-light);}
+  .nav-user{display:flex;align-items:center;gap:.5rem;padding:.4rem .75rem;font-size:.875rem;color:var(--text-muted);}
+  .nav-avatar{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;}
+  .theme-btn{width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;transition:all .15s;margin-left:.5rem;}
+  .theme-btn:hover{color:var(--text);border-color:var(--accent);}
+  .logout-btn{font-size:.875rem;color:var(--text-muted);background:none;border:none;cursor:pointer;padding:.4rem .75rem;border-radius:6px;font-family:var(--font-sans);}
+  .logout-btn:hover{color:var(--danger);}
+  main{flex:1;padding:2rem 1.5rem;}
+  .container{max-width:900px;margin:0 auto;}
+  .page-title{font-family:var(--font-serif);font-size:1.75rem;font-weight:700;margin-bottom:2rem;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.5rem;box-shadow:var(--shadow);}
+  .card-title{font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:1.25rem;}
+
+  /* STATS ROW */
+  .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1rem;margin-bottom:1.5rem;}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;text-align:center;box-shadow:var(--shadow);}
+  .stat-val{font-family:var(--font-serif);font-size:2rem;font-weight:700;color:var(--accent);}
+  .stat-label{font-size:.8rem;color:var(--text-muted);margin-top:.25rem;}
+  .stat-icon{font-size:1.5rem;margin-bottom:.5rem;}
+
+  /* HEATMAP */
+  .heatmap-wrap{overflow-x:auto;}
+  .heatmap-grid{display:flex;gap:3px;align-items:flex-end;}
+  .heatmap-col{display:flex;flex-direction:column;gap:3px;}
+  .heatmap-cell{width:13px;height:13px;border-radius:2px;background:var(--surface2);cursor:pointer;transition:opacity .1s;}
+  .heatmap-cell:hover{opacity:.7;}
+  .heatmap-cell[data-level="1"]{background:#c6e6d0;}
+  .heatmap-cell[data-level="2"]{background:#7dc9a0;}
+  .heatmap-cell[data-level="3"]{background:#3d9e6e;}
+  .heatmap-cell[data-level="4"]{background:#2d6a4f;}
+  [data-theme="dark"] .heatmap-cell[data-level="1"]{background:#1a3d28;}
+  [data-theme="dark"] .heatmap-cell[data-level="2"]{background:#2d6a4f;}
+  [data-theme="dark"] .heatmap-cell[data-level="3"]{background:#4a9e70;}
+  [data-theme="dark"] .heatmap-cell[data-level="4"]{background:#6ac890;}
+  .heatmap-months{display:flex;gap:3px;font-size:.7rem;color:var(--text-muted);margin-bottom:4px;}
+  .heatmap-legend{display:flex;align-items:center;gap:4px;font-size:.75rem;color:var(--text-muted);margin-top:.75rem;}
+  .legend-cells{display:flex;gap:3px;}
+
+  /* TOOLTIP */
+  .tooltip{position:fixed;background:var(--text);color:var(--bg);font-size:.75rem;padding:.35rem .6rem;border-radius:5px;pointer-events:none;z-index:999;display:none;white-space:nowrap;}
+
+  /* RECENT ACTIVITY */
+  .activity-list{display:flex;flex-direction:column;gap:0;}
+  .activity-group-label{font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;padding:.75rem 0 .4rem;}
+  .activity-item{display:flex;align-items:center;gap:1rem;padding:.6rem 0;border-bottom:1px solid var(--surface2);}
+  .activity-item:last-child{border-bottom:none;}
+  .activity-thumb{width:40px;height:27px;border-radius:4px;object-fit:cover;background:var(--surface2);flex-shrink:0;}
+  .activity-thumb-placeholder{width:40px;height:27px;border-radius:4px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;}
+  .activity-title{font-size:.875rem;font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .activity-meta{font-size:.75rem;color:var(--text-muted);white-space:nowrap;}
+
+  /* TOP EXERCISES */
+  .top-ex-item{display:flex;align-items:center;gap:1rem;padding:.75rem 0;border-bottom:1px solid var(--surface2);}
+  .top-ex-item:last-child{border-bottom:none;}
+  .top-ex-rank{font-size:.75rem;color:var(--text-muted);min-width:1.25rem;text-align:center;}
+  .top-ex-info{flex:1;overflow:hidden;}
+  .top-ex-title{font-size:.875rem;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .top-ex-time{font-size:.75rem;color:var(--text-muted);}
+  .top-ex-bar-wrap{width:120px;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;}
+  .top-ex-bar{height:100%;background:var(--accent);border-radius:3px;}
+
+  .empty-note{color:var(--text-muted);font-size:.9rem;text-align:center;padding:2rem 0;}
+  .spinner{width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;margin:2rem auto;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <a href="index.html" class="logo">
+    <div class="logo-icon">🎧</div>
+    DictationApp
+  </a>
+  <div class="nav-links">
+    <a href="index.html">📚 Library</a>
+    <a href="progress.html" class="active">📊 Progress</a>
+    <span class="nav-user">
+      <div class="nav-avatar" id="navAvatar">?</div>
+      <span id="navName">…</span>
+    </span>
+    <button class="logout-btn" id="logoutBtn">Sign out</button>
+    <button class="theme-btn" id="themeBtn">🌙</button>
+  </div>
+</nav>
+
+<main>
+  <div class="container">
+    <h1 class="page-title">My Progress</h1>
+
+    <!-- STATS ROW -->
+    <div class="stats-row" id="statsRow">
+      <div class="stat-card"><div class="stat-icon">📹</div><div class="stat-val" id="statExercises">–</div><div class="stat-label">Exercises</div></div>
+      <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-val" id="statCompleted">–</div><div class="stat-label">Completed</div></div>
+      <div class="stat-card"><div class="stat-icon">🎯</div><div class="stat-val" id="statPassed">–</div><div class="stat-label">Challenges passed</div></div>
+      <div class="stat-card"><div class="stat-icon">🔥</div><div class="stat-val" id="statStreak">–</div><div class="stat-label">Day streak</div></div>
+      <div class="stat-card"><div class="stat-icon">⏱</div><div class="stat-val" id="statTime">–</div><div class="stat-label">Total time</div></div>
+    </div>
+
+    <!-- ACTIVITY HEATMAP -->
+    <div class="card">
+      <div class="card-title">Activity — last 12 weeks</div>
+      <div class="heatmap-wrap">
+        <div class="heatmap-months" id="heatmapMonths"></div>
+        <div class="heatmap-grid" id="heatmapGrid"></div>
+      </div>
+      <div class="heatmap-legend">
+        Less
+        <div class="legend-cells">
+          <div class="heatmap-cell"></div>
+          <div class="heatmap-cell" data-level="1"></div>
+          <div class="heatmap-cell" data-level="2"></div>
+          <div class="heatmap-cell" data-level="3"></div>
+          <div class="heatmap-cell" data-level="4"></div>
+        </div>
+        More
+      </div>
+    </div>
+
+    <!-- RECENT ACTIVITY + TOP EXERCISES -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+      <div class="card">
+        <div class="card-title">Recent Activity</div>
+        <div id="recentActivity"><div class="spinner"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Most Practiced</div>
+        <div id="topExercises"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script type="module">
+import { auth, stats } from './js/api.js';
+
+// ── Auth guard ────────────────────────────────────────────────
+let currentUser = null;
+
+async function init() {
+  currentUser = await auth.restoreSession();
+  if (!currentUser) { window.location.href = 'login.html'; return; }
+  document.getElementById('navName').textContent = currentUser.displayName;
+  document.getElementById('navAvatar').textContent = currentUser.displayName[0].toUpperCase();
+
+  loadAll();
+}
+
+// ── Theme ─────────────────────────────────────────────────────
+let dark = localStorage.getItem('dd-theme') === 'dark' ||
+  (!localStorage.getItem('dd-theme') && matchMedia('(prefers-color-scheme:dark)').matches);
+function applyTheme() {
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  document.getElementById('themeBtn').textContent = dark ? '☀️' : '🌙';
+}
+applyTheme();
+document.getElementById('themeBtn').addEventListener('click', () => {
+  dark = !dark; localStorage.setItem('dd-theme', dark ? 'dark' : 'light'); applyTheme();
+});
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await auth.logout(); window.location.href = 'login.html';
+});
+
+// ── Load all data ─────────────────────────────────────────────
+async function loadAll() {
+  const [overview, activityData, exerciseData] = await Promise.all([
+    stats.me().catch(() => null),
+    stats.activity().catch(() => null),
+    stats.exercises().catch(() => null),
+  ]);
+
+  if (overview) renderStats(overview);
+  if (activityData) renderHeatmap(activityData.activity);
+  if (exerciseData) {
+    renderRecentActivity(exerciseData.recentActivity);
+    renderTopExercises(exerciseData.topByTime);
+  }
+}
+
+// ── Stats row ─────────────────────────────────────────────────
+function renderStats(data) {
+  document.getElementById('statExercises').textContent = data.totalExercises;
+  document.getElementById('statCompleted').textContent = data.completed;
+  document.getElementById('statPassed').textContent = data.totalPassed;
+  document.getElementById('statStreak').textContent = data.streakDays + (data.streakDays === 1 ? ' day' : ' days');
+  document.getElementById('statTime').textContent = formatDuration(data.totalTimeMs);
+}
+
+function formatDuration(ms) {
+  const h = Math.floor(ms / 3600000);
+  const m = Math.floor((ms % 3600000) / 60000);
+  if (h > 0) return `${h}h ${m}m`;
+  if (m > 0) return `${m}m`;
+  return `${Math.floor(ms / 1000)}s`;
+}
+
+// ── Heatmap ───────────────────────────────────────────────────
+function renderHeatmap(activity) {
+  const activityMap = {};
+  for (const a of activity) {
+    activityMap[a._id] = a.challengesPassed;
+  }
+
+  const maxVal = Math.max(...Object.values(activityMap), 1);
+
+  // Build 12 weeks of columns, Mon-Sun
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+  const dayOfWeek = today.getDay(); // 0=Sun
+  // Align to last Sunday
+  const endSunday = new Date(today);
+  endSunday.setDate(today.getDate() + (7 - dayOfWeek) % 7);
+
+  const weeks = 12;
+  const startDate = new Date(endSunday);
+  startDate.setDate(endSunday.getDate() - weeks * 7 + 1);
+
+  const grid = document.getElementById('heatmapGrid');
+  const months = document.getElementById('heatmapMonths');
+  grid.innerHTML = '';
+  months.innerHTML = '';
+
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  let prevMonth = -1;
+  let monthOffset = 0;
+
+  for (let w = 0; w < weeks; w++) {
+    const col = document.createElement('div');
+    col.className = 'heatmap-col';
+
+    for (let d = 0; d < 7; d++) {
+      const date = new Date(startDate);
+      date.setDate(startDate.getDate() + w * 7 + d);
+      if (date > today) { col.appendChild(document.createElement('div')); continue; }
+
+      const dateStr = date.toISOString().slice(0, 10);
+      const val = activityMap[dateStr] || 0;
+      const level = val === 0 ? 0 : val < maxVal * .25 ? 1 : val < maxVal * .5 ? 2 : val < maxVal * .75 ? 3 : 4;
+
+      const cell = document.createElement('div');
+      cell.className = 'heatmap-cell';
+      if (level > 0) cell.dataset.level = level;
+      cell.dataset.date = dateStr;
+      cell.dataset.count = val;
+      cell.addEventListener('mousemove', showTooltip);
+      cell.addEventListener('mouseleave', hideTooltip);
+      col.appendChild(cell);
+
+      // Month label
+      if (d === 0 && date.getMonth() !== prevMonth) {
+        const span = document.createElement('span');
+        span.style.cssText = `position:absolute;left:${w * 16}px`;
+        span.textContent = MONTHS[date.getMonth()];
+        months.appendChild(span);
+        prevMonth = date.getMonth();
+      }
+    }
+
+    grid.appendChild(col);
+  }
+
+  months.style.position = 'relative';
+  months.style.height = '16px';
+}
+
+const tooltip = document.getElementById('tooltip');
+function showTooltip(e) {
+  const date = e.target.dataset.date;
+  const count = parseInt(e.target.dataset.count) || 0;
+  tooltip.textContent = `${date}: ${count} challenge${count !== 1 ? 's' : ''} passed`;
+  tooltip.style.display = 'block';
+  tooltip.style.left = (e.clientX + 12) + 'px';
+  tooltip.style.top = (e.clientY - 30) + 'px';
+}
+function hideTooltip() { tooltip.style.display = 'none'; }
+
+// ── Recent Activity ───────────────────────────────────────────
+function renderRecentActivity(items) {
+  const el = document.getElementById('recentActivity');
+  if (!items || items.length === 0) {
+    el.innerHTML = '<div class="empty-note">No activity yet.<br>Complete some challenges to see your history.</div>';
+    return;
+  }
+
+  // Group by date
+  const groups = {};
+  for (const item of items) {
+    const dateStr = new Date(item.date).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+    if (!groups[dateStr]) groups[dateStr] = [];
+    groups[dateStr].push(item);
+  }
+
+  let html = '<div class="activity-list">';
+  for (const [date, dayItems] of Object.entries(groups)) {
+    html += `<div class="activity-group-label">${date}</div>`;
+    for (const item of dayItems) {
+      const ex = item.exerciseId;
+      const thumb = ex?.thumbnailUrl
+        ? `<img class="activity-thumb" src="${ex.thumbnailUrl}" alt="" loading="lazy">`
+        : `<div class="activity-thumb-placeholder">🎬</div>`;
+      html += `
+        <div class="activity-item">
+          ${thumb}
+          <div class="activity-title">${escHtml(ex?.title || 'Unknown exercise')}</div>
+          <div class="activity-meta">${item.challengesPassed} passed · ${formatDuration(item.durationMs)}</div>
+        </div>`;
+    }
+  }
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+// ── Top Exercises ─────────────────────────────────────────────
+function renderTopExercises(items) {
+  const el = document.getElementById('topExercises');
+  if (!items || items.length === 0) {
+    el.innerHTML = '<div class="empty-note">No data yet.</div>';
+    return;
+  }
+
+  const maxTime = Math.max(...items.map(i => i.totalTimeMs), 1);
+  let html = '';
+  items.forEach((item, idx) => {
+    const ex = item.exerciseId;
+    const pct = Math.round((item.totalTimeMs / maxTime) * 100);
+    html += `
+      <div class="top-ex-item">
+        <div class="top-ex-rank">${idx + 1}</div>
+        <div class="top-ex-info">
+          <div class="top-ex-title">${escHtml(ex?.title || 'Unknown')}</div>
+          <div class="top-ex-time">${formatDuration(item.totalTimeMs)} · ${item.totalPassed} passed</div>
+        </div>
+        <div class="top-ex-bar-wrap"><div class="top-ex-bar" style="width:${pct}%"></div></div>
+      </div>`;
+  });
+  el.innerHTML = html;
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+init();
+</script>
+</body>
+</html>

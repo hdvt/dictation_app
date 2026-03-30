@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import express from 'express';
+import path from 'path';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { connectDB } from './config/db.js';
@@ -7,6 +8,8 @@ import authRouter from './routes/auth.js';
 import exercisesRouter from './routes/exercises.js';
 import progressRouter from './routes/progress.js';
 import statsRouter from './routes/stats.js';
+;
+
 import { errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -22,6 +25,7 @@ app.use(cookieParser());
 // resolve CORS error when frontend is served from a different port (e.g. via Live Server) by allowing loopback in browser flags (e.g. chrome://flags/#allow-insecure-localhost)  
 
 
+app.use(express.static(path.join(process.cwd(), 'public'))); // serve frontend from backend for simplicity (can be separate in prod)
 
 // ── Routes ────────────────────────────────────────────────────
 app.use('/api/auth', authRouter);
