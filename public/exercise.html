@@ -229,31 +229,29 @@
 
     /* DICTATION AREA */
     .dictation-area {
-      padding: 2rem 2.5rem;
+      padding: 1rem 1.5rem 1.5rem;
     }
 
     /* AUDIO CONTROLS */
     .audio-controls {
       display: flex;
       align-items: center;
-      gap: .6rem;
-      margin-bottom: 1rem;
-      flex-wrap: wrap;
+      gap: .5rem;
+      margin-bottom: .75rem;
     }
 
     .audio-controls-left {
       display: flex;
       align-items: center;
-      gap: .6rem;
-      flex: 1;
-      min-width: 0;
+      flex-shrink: 0;
     }
 
     .audio-controls-right {
       display: flex;
       align-items: center;
-      gap: .4rem;
-      flex-wrap: wrap;
+      gap: .35rem;
+      margin-left: auto;
+      flex-shrink: 0;
     }
 
     .play-btn {
@@ -275,16 +273,6 @@
     .play-btn:hover {
       opacity: .88;
       transform: scale(1.05);
-    }
-
-    .audio-label {
-      flex: 1;
-      min-width: 0;
-      font-size: .9rem;
-      color: var(--text-muted);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
 
     .speed-btns {
@@ -394,7 +382,7 @@
     /* INPUT */
     .input-wrapper {
       position: relative;
-      margin-bottom: 1rem;
+      margin-bottom: .75rem;
     }
 
     .input-highlight {
@@ -448,6 +436,7 @@
     .dictation-input.correct {
       border-color: var(--success);
       background: rgba(45, 106, 63, .07);
+      cursor: text;
     }
 
     .dictation-input.incorrect {
@@ -700,25 +689,23 @@
 
     @media(max-width:700px) {
       .dictation-area {
-        padding: 1rem;
+        padding: .75rem 1rem 1rem;
       }
 
-      .audio-controls {
-        gap: .5rem;
+      .play-btn {
+        width: 44px;
+        height: 44px;
+        font-size: 1rem;
       }
 
-      .audio-controls-left {
-        width: 100%;
-        flex: none;
+      .speed-btn {
+        padding: .25rem .5rem;
+        font-size: .78rem;
       }
 
-      .audio-controls-right {
-        width: 100%;
-        justify-content: flex-start;
-      }
-
-      .speed-btns {
-        flex-wrap: wrap;
+      .replay-select {
+        font-size: .78rem;
+        max-width: 95px;
       }
 
       .action-row {
@@ -734,7 +721,12 @@
 
       .dictation-input {
         font-size: 1.1rem;
-        padding: 1rem 1.1rem;
+        padding: .875rem 1rem;
+      }
+
+      .input-highlight {
+        padding: .875rem 1rem;
+        font-size: 1.1rem;
       }
 
       .word-feedback {
@@ -745,22 +737,17 @@
         max-width: 140px;
         font-size: .85rem;
       }
-
     }
 
-    @media(max-width:420px) {
-      .audio-controls-right {
-        gap: .3rem;
-      }
-
+    @media(max-width:380px) {
       .speed-btn {
-        padding: .25rem .45rem;
-        font-size: .75rem;
+        padding: .22rem .4rem;
+        font-size: .74rem;
       }
 
       .replay-select {
-        max-width: 90px;
-        font-size: .75rem;
+        max-width: 82px;
+        font-size: .74rem;
       }
     }
   </style>
@@ -804,7 +791,6 @@
             <div class="audio-controls">
               <div class="audio-controls-left">
                 <button class="play-btn" id="playBtn">▶</button>
-                <div class="audio-label" id="audioLabel">Click play to listen to the current sentence</div>
               </div>
               <div class="audio-controls-right">
                 <div class="speed-btns">
@@ -919,7 +905,6 @@
     const successBanner = document.getElementById('successBanner');
     const progressBar = document.getElementById('progressBar');
     const progressLabel = document.getElementById('progressLabel');
-    const audioLabel = document.getElementById('audioLabel');
 
     // ── Theme ─────────────────────────────────────────────────────
     let dark = localStorage.getItem('dd-theme') === 'dark' ||
@@ -1011,22 +996,15 @@
             onStateChange: (e) => {
               if (e.data === YT.PlayerState.PLAYING) {
                 isPlaying = true; playBtn.innerHTML = '⏸';
-                audioLabel.textContent = 'Playing…';
+                
               } else {
                 isPlaying = false; playBtn.innerHTML = '▶';
                 if (e.data === YT.PlayerState.PAUSED) {
                   // Auto-replay: replay if challenge not yet passed and replays remain
                   if (replayCountdown > 0 && !completed.has(currentIdx)) {
                     replayCountdown--;
-                    audioLabel.textContent = replayCountdown > 0
-                      ? `Auto-replaying… (${replayCountdown} left)`
-                      : 'Click play to listen again';
                     setTimeout(playCurrentChallenge, 600);
-                  } else {
-                    audioLabel.textContent = 'Click play to listen again';
                   }
-                } else if (e.data === YT.PlayerState.ENDED) {
-                  audioLabel.textContent = 'Click play to listen again';
                 }
               }
             }
@@ -1070,7 +1048,7 @@
       ytPlayer.setPlaybackRate(speed);
       ytPlayer.seekTo(ch.timeStart, true);
       ytPlayer.playVideo();
-      audioLabel.textContent = `Challenge ${currentIdx + 1}: listening…`;
+      
       const durationMs = (ch.timeEnd - ch.timeStart) / speed * 1000;
       scheduleStop(ch.timeEnd, durationMs, playGeneration);
     }
