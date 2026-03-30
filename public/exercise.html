@@ -337,13 +337,17 @@
 
     /* WORD FEEDBACK */
     .word-feedback {
-      min-height: 2.5rem;
-      margin-bottom: .75rem;
+      margin-bottom: 0;
       display: flex;
       flex-wrap: wrap;
       gap: .35rem;
       align-items: center;
       font-size: 1.2rem;
+    }
+
+    .word-feedback:not(:empty) {
+      min-height: 2.5rem;
+      margin-bottom: .75rem;
     }
 
     .word {
@@ -450,11 +454,11 @@
       border: 1px solid var(--warning);
       border-radius: 8px;
       padding: .875rem 1rem;
-      margin-bottom: 1rem;
     }
 
     .answer-area.show {
       display: block;
+      margin-bottom: 1rem;
     }
 
     .answer-label {
@@ -479,13 +483,13 @@
       border: 1px solid var(--accent);
       border-radius: 8px;
       padding: .875rem 1rem;
-      margin-bottom: 1rem;
       align-items: center;
       gap: .75rem;
     }
 
     .success-banner.show {
       display: flex;
+      margin-bottom: 1rem;
     }
 
     .success-icon {
@@ -793,11 +797,6 @@
                 <button class="play-btn" id="playBtn">▶</button>
               </div>
               <div class="audio-controls-right">
-                <div class="speed-btns">
-                  <button class="speed-btn active" data-speed="1">1×</button>
-                  <button class="speed-btn" data-speed="0.75">0.75×</button>
-                  <button class="speed-btn" data-speed="0.5">0.5×</button>
-                </div>
                 <div class="replay-setting">
                   <label class="replay-label" for="autoReplaySelect" title="Auto-replay">🔁</label>
                   <select class="replay-select" id="autoReplaySelect" title="Auto-replay times">
@@ -965,7 +964,7 @@
         // Pre-fill input if starting on an already-passed challenge
         if (completed.has(currentIdx)) {
           input.value = challenges[currentIdx].content;
-          input.readOnly = true;
+          
           input.classList.add('correct');
         }
 
@@ -1179,7 +1178,7 @@
         input.classList.remove('incorrect');
         // Fill with canonical answer and lock the input
         input.value = challenges[currentIdx].content;
-        input.readOnly = true;
+        
         successBanner.classList.add('show');
 
         if (!completed.has(currentIdx)) {
@@ -1237,13 +1236,13 @@
       if (completed.has(idx)) {
         // Challenge already passed — pre-fill the answer and lock input
         input.value = challenges[idx].content;
-        input.readOnly = true;
+        
         input.classList.add('correct');
         input.classList.remove('incorrect');
       } else {
         // Fresh challenge — clear and unlock
         input.value = '';
-        input.readOnly = false;
+        
         input.classList.remove('correct', 'incorrect');
       }
 
@@ -1330,7 +1329,7 @@
       }
     });
     input.addEventListener('input', () => {
-      if (input.readOnly) return;  // don't clear state for locked (passed) challenges
+      if (completed.has(currentIdx)) return;
       clearInputHighlight();
       wordFeedback.innerHTML = '';
       answerArea.classList.remove('show');

@@ -172,5 +172,9 @@ Open `http://localhost:5500` in your browser.
 - The frontend's `api.js` handles token refresh transparently on 401 responses
 
 ## Todo
-- improve dication UX/UI:
-    + 
+- update checking logic:
+    + 3 = three
+    + real-time = real time
+- update UI/UX:
+    + For Full transcript tab, highlight the current sentence 
+- Fix replay time configuration: don't repeat correctly  
