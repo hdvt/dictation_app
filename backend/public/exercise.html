@@ -113,37 +113,6 @@
       max-width: 340px;
     }
 
-    .nav-progress {
-      margin-left: auto;
-      display: flex;
-      align-items: center;
-      gap: .75rem;
-      font-size: .8rem;
-      color: var(--text-muted);
-    }
-
-    .nav-dots-mini {
-      display: flex;
-      gap: 2px;
-      flex-wrap: wrap;
-      max-width: 180px;
-    }
-
-    .ndot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--border);
-    }
-
-    .ndot.done {
-      background: var(--accent);
-    }
-
-    .ndot.curr {
-      background: var(--warning);
-    }
-
     .theme-btn {
       width: 34px;
       height: 34px;
@@ -777,14 +746,6 @@
         font-size: .85rem;
       }
 
-      .nav-dots-mini {
-        max-width: 100px;
-      }
-
-      .nav-progress {
-        gap: .4rem;
-        font-size: .75rem;
-      }
     }
 
     @media(max-width:420px) {
@@ -809,11 +770,7 @@
   <nav class="topbar">
     <a href="index.html" class="back-link">← Library</a>
     <div class="nav-title" id="navTitle">Loading…</div>
-    <div class="nav-progress">
-      <span id="navProgressLabel"></span>
-      <div class="nav-dots-mini" id="navDotsMini"></div>
-    </div>
-    <button class="theme-btn" id="themeBtn">🌙</button>
+    <button class="theme-btn" id="themeBtn" style="margin-left:auto">🌙</button>
   </nav>
 
   <main>
@@ -1028,7 +985,7 @@
         }
 
         updateUI();
-        updateNavMini();
+        
         buildTranscript();
         input.focus();
 
@@ -1254,7 +1211,7 @@
 
         updateProgress();
         updateDots();
-        updateNavMini();
+        
         spawnConfetti();
         clearStopTimer();
         playGeneration++;
@@ -1321,22 +1278,13 @@
       prevBtn.disabled = currentIdx === 0;
       nextBtn.disabled = currentIdx === challenges.length - 1;
       answerText.textContent = ch.content;
-      updateNavMini();
+      
       updateProgress();
       playCurrentChallenge();
     }
 
     function updateDots() {
       // nav dots removed — no-op kept for safety
-    }
-
-    function updateNavMini() {
-      const mini = document.getElementById('navDotsMini');
-      const label = document.getElementById('navProgressLabel');
-      mini.innerHTML = challenges.slice(0, 30).map((_, i) =>
-        `<div class="ndot${completed.has(i) ? ' done' : ''}${i === currentIdx ? ' curr' : ''}"></div>`
-      ).join('');
-      label.textContent = `${completed.size} / ${challenges.length}`;
     }
 
     function updateProgress() {
