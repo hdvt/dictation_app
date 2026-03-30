@@ -5,7 +5,7 @@
  * - Throws { error: string } on API errors so callers can handle cleanly
  */
 
-const BASE = 'https://labour-dice-jacket-charleston.trycloudflare.com/api';
+const BASE = '/api';
 
 let accessToken = null;
 
